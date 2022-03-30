@@ -1,48 +1,37 @@
-import matplotlib.pyplot as plt
-import pathlib
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras import layers
+from io import BytesIO
 import os
-from tensorflow.python.keras.models import Sequential
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.optimizers import RMSprop
-from tensorflow import keras
-from tensorflow.python.data import AUTOTUNE
+import sys
+import requests
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Selects Tensorflow CPU
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disables Tensorflow logs
+
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    import numpy as np
+    from PIL import Image
+except ModuleNotFoundError as error:
+    print('ERROR -', error)
+    input('Press ENTER to exit')
+    sys.exit()
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 print(f"Using Tensorflow version: {tf.__version__}")
 
-data_dir = "Raw_data_dogs"
 
-data_dir = pathlib.Path(data_dir)
+class dog_classification:
+    size = (180, 180)  # target size of image for prediction
+    model_name = 'undefined'  # name of the model (needs to be in same folder)
+    current_directory = os.path.join(os.path.dirname(__file__))  # get file's folder path
+    model_path = os.path.join(current_directory, model_name)
+    if not os.path.isfile(model_path):
+        print('ERROR - Model not found')
+        input('Press ENTER to exit')
+        sys.exit()
 
-img_height = 180
-img_width = 180
-batch_size = 32
+    model = keras.models.load_model(model_path)
+    class_names = []
 
-dataset_train = tf.keras.preprocessing.image_dataset_from_directory(
-    data_dir,
-    validation_split=0.2,
-    subset="training",
-    seed=123,
-    image_size=(img_height, img_width),
-    batch_size=batch_size
-)
-
-dataset_validation = tf.keras.preprocessing.image_dataset_from_directory(
-    data_dir,
-    validation_split=0.2,
-    subset="validation",
-    seed=123,
-    image_size=(img_height, img_width),
-    batch_size=batch_size
-)
-
-# Enter the different types of dog
-class_names = class_names = ['A01-15', 'A01-10', 'A01-100', 'A01-120', 'A01-130', 'A01-30',
-               'A01-5', 'A01-50', 'A01-60', 'A01-70', 'A01-80', 'A01-90']
-
-print(class_names)
