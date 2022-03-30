@@ -1,9 +1,10 @@
 import pathlib
-
+import numpy as np
 import tensorflow as tf
 import os
 from tensorflow.python.data import AUTOTUNE
 from tensorflow.keras import datasets, layers, models
+from tensorflow.python.keras.models import Sequential
 import matplotlib.pyplot as plt
 
 
@@ -54,37 +55,60 @@ for images, labels in train_ds.take(1):
     plt.show()
 
 
-# for image_batch, labels_batch in train_ds:
-#     print(image_batch.shape)
-#     print(labels_batch.shape)
-#     break
-#
-# normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
-# train_dataset = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
-# validation_dataset = train_dataset.cache().prefetch(buffer_size=AUTOTUNE)
-#
-# num_classes = len(class_names)
-#
-# chan_dim = -1
+for image_batch, labels_batch in train_ds:
+    print(image_batch.shape)
+    print(labels_batch.shape)
+    break
 
-# plt.figure(figsize=(10,10))
-# for i in range(25):
-#     plt.subplot(5,5,i+1)
-#     plt.xticks([])
-#     plt.yticks([])
-#     plt.grid(False)
-#     plt.imshow(train_images[i])
-#     # The CIFAR labels happen to be arrays,
-#     # which is why you need the extra index
-#     plt.xlabel(class_names[train_labels[i][0]])
-# plt.show()
+normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
+train_dataset = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
+validation_dataset = train_dataset.cache().prefetch(buffer_size=AUTOTUNE)
 
-# model = models.Sequential()
-# model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)))
-# model.add(layers.MaxPooling2D((2, 2)))
-# model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-# model.add(layers.MaxPooling2D((2, 2)))
-# model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-# model.summary()
-#
-# model.save('dog_prediction_model_1.h5')
+num_classes = len(class_names)
+
+chan_dim = -1
+
+model = Sequential([
+    # layers.experimental.preprocessing.Rescaling(1. / 255, input_shape=(img_height, img_width, 3)),
+    layers.Conv2D(8, (5, 5), padding='same', activation='relu', input_shape=(img_height, img_width, 3)),
+    layers.BatchNormalization(axis=chan_dim),
+    layers.MaxPooling2D(pool_size=(2, 2)),
+
+    layers.Conv2D(16, (3, 3), padding='same', activation='relu'),
+    layers.BatchNormalization(axis=chan_dim),
+    layers.Conv2D(16, (3, 3), padding='same', activation='relu'),
+    layers.BatchNormalization(axis=chan_dim),
+    layers.MaxPooling2D(pool_size=(2, 2)),
+
+    layers.Conv2D(32, (3, 3), padding='same', activation='relu'),
+    layers.BatchNormalization(axis=chan_dim),
+    layers.Conv2D(32, (3, 3), padding='same', activation='relu'),
+    layers.BatchNormalization(axis=chan_dim),
+    layers.MaxPooling2D(pool_size=(2, 2)),
+
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.BatchNormalization(),
+    layers.Dropout(0.5),
+
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.BatchNormalization(),
+    layers.Dropout(0.5),
+
+    layers.Dense(num_classes, activation='softmax'),
+])
+
+model.compile(
+  optimizer='adam',
+  loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
+  metrics=['accuracy'])
+
+model.fit(
+  train_dataset,
+  validation_data=validation_dataset,
+  epochs=20,
+  #callbacks=callbacks
+)
+
+model.save('dog_prediction_model_1.h5')
