@@ -6,7 +6,20 @@ from tensorflow.python.data import AUTOTUNE
 from tensorflow.keras import datasets, layers, models
 from tensorflow.python.keras.models import Sequential
 import matplotlib.pyplot as plt
+import sys
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Selects Tensorflow CPU
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Disables Tensorflow logs
+
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    import numpy as np
+    from PIL import Image
+except ModuleNotFoundError as error:
+    print('ERROR -', error)
+    input('Press ENTER to exit')
+    sys.exit()
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
